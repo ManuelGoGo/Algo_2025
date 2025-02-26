@@ -1,0 +1,11 @@
+
+
+# Compilados 
+*.[oa]
+
+
+# Ignorar directorios 
+Output/
+.vscode/
+output/
+
