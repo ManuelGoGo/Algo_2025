@@ -17,7 +17,7 @@ int main(){
   //Cálculos correspondientes
   area = a*h;
   // dividimos el area entre 12 para encontrar la cantidad de litros y luego 18 para encontrar la cantidad de baldes
-  bal = ceil(area/(12.0*18.0) );
+  bal = ceil(area/(12.0*18.0));
 
   printf("La cantidad de baldes de pintura que se usara para pintar la pared es de %d. \n", (int)bal);
 
