@@ -5,9 +5,9 @@
 int main()
 {
   float a b,c;
-  printf("Introdisca un valor para encontrar el resto\n");
+  printf("Introduzca un valor para encontrar el resto\n");
   scanf("%f",&a);
-  printf("Introdisca un valor para dividir\n");
+  printf("Introduzca un valor para dividir\n");
   scanf("%f",&b);
   c =a%b;
 
