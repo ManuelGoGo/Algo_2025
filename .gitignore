@@ -2,8 +2,8 @@
 
 # Compilados 
 *.[oa]
-Lenguaje-C.pdf
-.gitignore
+*.pdf
+
 # Ignorar directorios 
 Output/
 .vscode/
