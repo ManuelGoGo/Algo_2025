@@ -35,7 +35,8 @@ int main() {
 
     srand(time(NULL)); // Iniciamos la semilla
 
-    while (sabor1 == 0 ||sabor2 == 0 ||sabor3 == 0 || sabor4 == 0 || sabor5 == 0 || sabor6 == 0){
+    while (sabor1 == 0 ||sabor2 == 0 ||sabor3 == 0 || 
+        sabor4 == 0 || sabor5 == 0 || sabor6 == 0){
 
       switch (aleatorio(0,7)) {
         case 1:

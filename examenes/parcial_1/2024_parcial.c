@@ -13,6 +13,7 @@ int main() {
   srand(time(NULL)); // Iniciamos la semilla
   printf("Cuantas simulaciones queres hacer.");
 
+
   scanf("%d", &repeticiones);
 
   for(int simulaciones=1; simulaciones<repeticiones+1;simulaciones +=1){
