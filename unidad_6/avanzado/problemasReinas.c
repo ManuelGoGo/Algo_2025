@@ -30,6 +30,7 @@ int entero_valido(char entrada[]) {
 }
 
 // Función principal
+
 int pedir_numero(int minimo, int maximo) {
   char entrada[50];
   int numero;
@@ -44,9 +45,7 @@ int pedir_numero(int minimo, int maximo) {
 
   while (!valido) {
     fgets(entrada, sizeof(entrada), stdin);
-
-    // Eliminar salto de línea si existe
-    entrada[strcspn(entrada, "\n")] = '\0';
+    entrada[strcspn(entrada, "\n")] = '\0'; // Eliminar salto de línea
 
     if (!entero_valido(entrada)) {
       printf("❌ Error: entrada inválida, solo se permiten números enteros.\n");
@@ -54,7 +53,7 @@ int pedir_numero(int minimo, int maximo) {
       numero = atoi(entrada);
 
       if (numero >= minimo && (maximo <= 0 || numero <= maximo)) {
-        valido = 1;
+        valido = 1; //  Número dentro del rango
       } else {
         printf("❌ Error: número fuera del rango permitido.\n");
       }
@@ -71,81 +70,101 @@ int pedir_numero(int minimo, int maximo) {
   return numero;
 }
 
-// Función para pedir un número flotante dentro de un rango
-float pedir_float(float minimo, float maximo) {
-  float numero;
-  int resultado;
+// Función para pintar el tablero
+void tablero_respuesta(int fila_actual, int columna_actual, char **tablero,
+                       int dim) {
+  tablero[fila_actual][columna_actual] = 'R';
 
-  printf("Ingrese un número");
-  if (maximo > 0) {
-    printf(" entre %.2f y %.2f", minimo, maximo);
-  } else {
-    printf(" mayor o igual a %.2f", minimo);
-  }
-  printf(": ");
+  for (int fila = 0; fila < dim; fila++) { // Recorrer el tablero
+    for (int columna = 0; columna < dim; columna++) {
 
-  while (1) {
-    resultado = scanf("%f", &numero);
+      if (fila != fila_actual ||
+          columna !=
+              columna_actual) { // Si no es la casilla ocupada por la reina
 
-    if (resultado == 1) {
-      if ((numero >= minimo) && (maximo <= 0 || numero <= maximo)) {
-        return numero;
-      } else {
-        printf("❌ Error: número fuera del rango permitido.\n");
-      }
-    } else {
-      printf("❌ Error: entrada inválida, debe ser un número decimal.\n");
-    }
-
-    if (maximo > 0) {
-      printf("Ingrese un número entre %.2f y %.2f: ", minimo, maximo);
-    } else {
-      printf("Ingrese un número mayor o igual a %.2f: ", minimo);
-    }
-
-    limpiar_buffer(); // descarta entrada inválida
-  }
-}
-
-void texto_de_lista(char texto[], int vector[], int longitud) {
-  printf("%s", texto);
-  for (int i = 0; i < longitud - 1; i++) {
-    printf("%d, ", vector[i]);
-  }
-  printf("%d.", vector[longitud - 1]);
-  printf("\n");
-}
-
-char tablero_respuesta(int fila, int columna, char tablero[][]) {
-  for (int fil = 0; fil <= fila; fil++) {
-    for (int col = 0; col <= columna; col++) {
-      if (fila + columna == fil + col) {
-        tablero[fil][col] = 'P';
+        if (fila + columna ==
+                fila_actual + columna_actual && // Colocar las P en la diagonal
+            tablero[fila][columna] != 'R') {
+          tablero[fila][columna] = 'P';
+        } else if ((fila == fila_actual ||
+                    columna == columna_actual) && // colocar las P en las filas
+                                                  // y columnas
+                   tablero[fila][columna] != 'R') {
+          tablero[fila][columna] = 'P';
+        } else if ((fila - columna ==
+                    fila_actual -
+                        columna_actual) && // Colocar las P en la diagonal
+                   tablero[fila][columna] != 'R') {
+          tablero[fila][columna] = 'P';
+        }
       }
     }
   }
+}
 
-  return tablero;
+char **crear_matriz(int dim,
+                    char valor) { // Crear la matriz de n x n dimenciones y las
+                                  // rellena con un valor
+  char **matriz = malloc(dim * sizeof(char *));
+  for (int i = 0; i < dim; i++) {
+    matriz[i] = malloc(dim * sizeof(char));
+  }
+
+  for (int i = 0; i < dim; i++) {
+    for (int j = 0; j < dim; j++) {
+      matriz[i][j] = valor;
+    }
+  }
+  return matriz;
 }
 
 int main() {
-  int n;
+  int cant_reinas = 0;
   printf("Ingrese las dimenciones del tablero\n");
-  n = pedir_numero(2, 0);
-  int tablero[n][n];
+  int n = pedir_numero(2, 0);
 
-  for (int fila = 0; fila < n; fila++) {
-    for (int columna = 0; columna < n; columna++) {
-      tablero[fila][columna] = fila + columna;
+  char **tablero = crear_matriz(n, '*');
+  int lugares_reinas = 1;
+  while (lugares_reinas) {
+
+    printf("\nIngrese la fila seleccionada\n");
+    int fila_actual = pedir_numero(1, n) - 1;
+    printf("\nIngrese la columna seleccionada\n");
+    int columna_actual = pedir_numero(1, n) - 1;
+    printf("\n");
+
+    if (tablero[fila_actual][columna_actual] == 'R' ||
+        tablero[fila_actual][columna_actual] == 'P') {
+
+      printf("\nEl lugar seleccionado no es valido.\n\n");
+
+    } else {
+
+      tablero_respuesta(fila_actual, columna_actual, tablero, n);
+      cant_reinas++;
     }
-  }
+    lugares_reinas = 0;
+    // Imprimir el tablero
+    for (int fila = 0; fila < n; fila++) {
+      printf("%d| ", fila + 1);
 
-  for (int fila = 0; fila < n; fila++) {
+      for (int columna = 0; columna < n; columna++) {
+        printf("%c ", tablero[fila][columna]);
+
+        if (tablero[fila][columna] ==
+            '*') { // verifica que existan casillas vacias
+          lugares_reinas = 1;
+        }
+      }
+      printf("\n");
+    }
+
+    printf("   ");
     for (int columna = 0; columna < n; columna++) {
-      printf("%d ", tablero[fila][columna]);
+      printf("%d ", columna + 1);
     }
     printf("\n");
   }
-
+  printf("\nJuego Finalizado.\n Cantidad de reinas jugadas: %d\n", cant_reinas);
   return 0;
 }
