@@ -1,0 +1,5 @@
+1, Primer Parcial
+2, Segundo Parcial
+3, Tercer Parcial
+4, Primer Final
+5, Segundo Final

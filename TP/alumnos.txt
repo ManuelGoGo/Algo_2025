@@ -1,0 +1,5 @@
+1, Juan Carrillo, Ingeniería en Electrónica
+2, Shirley Cantero, Ingeniería en Electricidad
+3, Rodrigo Ferreira, Ingeniería Aeronaútica
+4, Luana Pereira, Ingeniería en Energía
+5, Teresa Figueredo, Ingeniería en Ciencias de los Materiales
