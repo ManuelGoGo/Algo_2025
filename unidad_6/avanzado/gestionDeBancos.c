@@ -90,6 +90,7 @@ float pedir_float(float minimo, float maximo) {
     resultado = scanf("%f", &numero);
 
     if ((numero >= minimo) && (maximo <= 0 || numero <= maximo)) {
+      limpiar_buffer();
       return numero;
     } else {
       printf("❌ Error: número fuera del rango permitido.\n");
@@ -104,6 +105,7 @@ float pedir_float(float minimo, float maximo) {
     limpiar_buffer(); // descarta entrada inválida
   }
 }
+
 // Función para validar si una cadena tiene solo caracteres alfabéticos (texto)
 int texto_valido(char entrada[]) {
   for (int i = 0; entrada[i] != '\0'; i++) {
@@ -220,10 +222,10 @@ void registrar_cliente(Cliente clientes[], int *numClientes) {
     pedir_texto_valido(clientes[*numClientes].apellido, 50);
 
     printf("Ingrese documento del cliente(puede contener letras y numeros): ");
-    clientes[*numClientes].documento = pedir_numero(1, 999999);
+    clientes[*numClientes].documento = pedir_numero(1, 0);
 
     printf("Ingrese teléfono del cliente: ");
-    clientes[*numClientes].telefono = pedir_numero(1, 9999999999);
+    clientes[*numClientes].telefono = pedir_numero(1, 0);
 
     clientes[*numClientes].numCliente = *numClientes;
     (*numClientes)++; // aumentar el número de clientes registrados
@@ -271,50 +273,111 @@ void registrar_cuenta(Cliente clientes[], int selecCliente, int totalClientes) {
   }
 }
 
-void registarar_movimiento(Cliente clientes[], int selecCliente) {
+int es_bisiesto(int anio) {
+  return (anio % 4 == 0 && anio % 100 != 0) || (anio % 400 == 0);
+}
+
+// Devuelve el número de días del mes
+int dias_del_mes(int mes, int anio) {
+  switch (mes) {
+  case 1:
+  case 3:
+  case 5:
+  case 7:
+  case 8:
+  case 10:
+  case 12:
+    return 31;
+  case 4:
+  case 6:
+  case 9:
+  case 11:
+    return 30;
+  case 2:
+    return es_bisiesto(anio) ? 29 : 28;
+  default:
+    return 0;
+  }
+}
+
+// Pide una fecha válida al usuario
+struct Fecha pedir_fecha() {
+  struct Fecha fecha;
+  int diasMes;
+
+  while (1) {
+    printf("Ingrese la fecha (DD MM AAAA): ");
+    fecha.dia = pedir_numero(1, 31);
+    fecha.mes = pedir_numero(1, 12);
+    fecha.anio = pedir_numero(1000, 9999);
+
+    if (fecha.anio < 1 || fecha.mes < 1 || fecha.mes > 12) {
+      printf("❌ Fecha inválida. Intente de nuevo.\n");
+      continue;
+    }
+
+    diasMes = dias_del_mes(fecha.mes, fecha.anio);
+
+    if (fecha.dia < 1 || fecha.dia > diasMes) {
+      printf("❌ Día inválido para ese mes. Intente de nuevo.\n");
+      continue;
+    }
+
+    break; // fecha válida
+  }
+
+  return fecha;
+}
+
+void registrar_movimiento(Cliente clientes[], int selecCliente) {
+  int indice = clientes[selecCliente].cuenta.numMovimientos;
+
   printf("\nNombre de cliente seleccionado: %s %s\n",
          clientes[selecCliente].nombre, clientes[selecCliente].apellido);
 
   printf("Ingrese el movimiento (2 para deposito, 1 para extraccion): ");
-  float movimiento = pedir_numero(1, 2);
-  clientes[selecCliente]
-      .cuenta.movimiento[clientes[selecCliente].cuenta.numMovimientos]
-      .movimiento = movimiento;
+  int movimiento = pedir_numero(1, 2);
+  clientes[selecCliente].cuenta.movimiento[indice].movimiento = movimiento;
+
+  // Pide la fecha
+  clientes[selecCliente].cuenta.movimiento[indice].fecha = pedir_fecha();
 
   printf("Ingrese el monto: ");
   float monto = pedir_float(0.01, 0);
-
-  clientes[selecCliente]
-      .cuenta.movimiento[clientes[selecCliente].cuenta.numMovimientos]
-      .monto = monto;
 
   if (movimiento == 2) {
     clientes[selecCliente].cuenta.saldoActual += monto;
   } else if (monto <= clientes[selecCliente].cuenta.saldoActual) {
     clientes[selecCliente].cuenta.saldoActual -= monto;
   } else {
-    printf("Saldo insuficiente para la extracción.\n");
-    return; // evita que se registre el movimiento
+    printf("❌ Saldo insuficiente para la extracción.\n");
+    return; // no se registra el movimiento
   }
+
+  clientes[selecCliente].cuenta.movimiento[indice].monto = monto;
+  clientes[selecCliente].cuenta.numMovimientos++;
+  printf("Movimiento registrado con éxito. Nuevo saldo: %.2f\n",
+         clientes[selecCliente].cuenta.saldoActual);
 };
 
 void imprimir_extracto(Cliente clientes[], int selecCliente) {
-
   printf("\nNombre de cliente seleccionado: %s %s\n",
          clientes[selecCliente].nombre, clientes[selecCliente].apellido);
 
   printf("Extracto de cuenta:\n");
   for (int i = 0; i < clientes[selecCliente].cuenta.numMovimientos; i++) {
-    printf("Movimiento %d: ", i + 1);
-    if (clientes[selecCliente].cuenta.movimiento[i].movimiento == 2) {
-      printf("Deposito de %.2f\n",
-             clientes[selecCliente].cuenta.movimiento[i].monto);
+    struct Movimiento mov = clientes[selecCliente].cuenta.movimiento[i];
+
+    printf("Movimiento %d - Fecha: %02d/%02d/%04d: ", i + 1, mov.fecha.dia,
+           mov.fecha.mes, mov.fecha.anio);
+
+    if (mov.movimiento == 2) {
+      printf("Depósito de %.2f\n", mov.monto);
     } else {
-      printf("Extraccion de %.2f\n",
-             clientes[selecCliente].cuenta.movimiento[i].monto);
+      printf("Extracción de %.2f\n", mov.monto);
     }
   }
-};
+}
 
 int main() {
   Cliente clientes[10];
@@ -322,7 +385,7 @@ int main() {
   srand(time(NULL)); // Iniciamos la semilla
 
   while (1) {
-    printf("Seleccione una opcion:\n"
+    printf("\nSeleccione una opcion:\n"
            "1. Registrar cliente\n"
            "2. Registrar cuenta\n"
            "3. Registrar movimiento\n"
@@ -339,15 +402,18 @@ int main() {
       break;
     case 2: // Registrar cuenta
       if (totalClientes != 0) {
-        printf("Registrar cuenta.\n");
+        printf("\nRegistrar cuenta.\n");
         int selecCliente = selec_cliente(clientes, totalClientes);
-        registrar_cuenta(clientes, selecCliente, totalClientes);
-        printf("\nSe a guardado con exito la cuenta.\n");
+        if (clientes[selecCliente].cuenta.tipo == 0) {
+          registrar_cuenta(clientes, selecCliente, totalClientes);
+          printf("\nSe a guardado con exito la cuenta.\n");
+        } else {
+          printf("\n❌ El cliente seleccionado ya tiene una cuenta.\n");
+        }
       } else {
         printf("❌ No hay clientes registrados.\n");
       }
 
-      limpiar_buffer();
       break;
     case 3: // Registrar Movimiento
       printf("Registrar Movimiento\n");
@@ -357,15 +423,16 @@ int main() {
             "Seleccione el cliente en el que desea registrar el movimiento.\n");
         int selecCliente = selec_cliente(clientes, totalClientes);
 
-        if (clientes[selecCliente].cuenta.tipo == 1) {
+        if (clientes[selecCliente].cuenta.tipo == 1 ||
+            clientes[selecCliente].cuenta.tipo == 2) {
           if (clientes[selecCliente].cuenta.numMovimientos < 10) {
-            registarar_movimiento(clientes, selecCliente);
+            registrar_movimiento(clientes, selecCliente);
           } else {
             printf(
                 "El cliente seleccionado alcanzo el limite de movimientos.\n");
           }
         } else {
-          printf("❌ El cliente seleccionado no tiene una cuenta.\n");
+          printf("\n❌ El cliente seleccionado no tiene una cuenta.\n");
         }
 
       } else {
@@ -380,8 +447,12 @@ int main() {
         printf("Seleccione el cliente en el que desea consultar el saldo.\n");
         int selecCliente = selec_cliente(clientes, totalClientes);
 
-        if (clientes[selecCliente].cuenta.tipo != 0) {
-          printf("\nEl saldo de la cuenta es: %0.2f\n\n",
+        if (clientes[selecCliente].cuenta.tipo == 1 ||
+            clientes[selecCliente].cuenta.tipo == 2) {
+          printf("\nCliente: %s %s\n", clientes[selecCliente].nombre,
+                 clientes[selecCliente].apellido);
+
+          printf("Saldo actual de la cuenta: $%.2f\n\n",
                  clientes[selecCliente].cuenta.saldoActual);
         } else {
           printf("❌ El cliente seleccionado no tiene una cuenta.\n");
@@ -392,19 +463,23 @@ int main() {
       }
       break;
     case 5: // Imprimir extracto de cuenta
-      printf("Imprimir extracto de cuenta\n");
-      if (totalClientes != 0) {
 
+      printf("Imprimir extractos de cuenta\n");
+      if (totalClientes != 0) {
         printf("Seleccione el cliente en el que desea consultar el saldo.\n");
         int selecCliente = selec_cliente(clientes, totalClientes);
 
-        if (clientes[selecCliente].cuenta.tipo != 0) {
-          imprimir_extracto(clientes, selecCliente);
-
+        if (clientes[selecCliente].cuenta.tipo == 1 ||
+            clientes[selecCliente].cuenta.tipo == 2) {
+          if (clientes[selecCliente].cuenta.numMovimientos > 0) {
+            imprimir_extracto(clientes, selecCliente);
+          } else {
+            printf("📭 El cliente seleccionado aún no tiene movimientos "
+                   "registrados.\n");
+          }
         } else {
           printf("❌ El cliente seleccionado no tiene una cuenta.\n");
         }
-
       } else {
         printf("❌ No hay clientes registrados.\n");
       }
@@ -414,23 +489,6 @@ int main() {
       return 0;
       break;
     }
-    /*
-        for (int i = 0; i < totalClientes; i++) {
-          printf("------------------------------------------------\n");
-          printf("Nombre: %s\n", clientes[i].nombre);
-          printf("Apellido: %s\n", clientes[i].apellido);
-          printf("Documento: %d\n", clientes[i].documento);
-          printf("Telefono: %d\n", clientes[i].telefono);
-          printf("Numero de cliente: %d\n", clientes[i].numCliente);
-          if (clientes[i].cuenta.tipo == 2) {
-            printf("Cuenta de ahorro con saldo inicial: %0.2f \n",
-                   clientes[i].cuenta.saldoInicial);
-          } else if (clientes[i].cuenta.tipo == 1) {
-            printf("Cuenta corriente con saldo inicial: %0.2f \n",
-                   clientes[i].cuenta.saldoInicial);
-          }
-          printf("------------------------------------------------\n");
-        }*/
   }
 
   return 0;

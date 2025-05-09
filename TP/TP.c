@@ -1,133 +1,152 @@
-#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 typedef struct {
-  char tipo[50];
-  int nota;
   int id;
+  char tipo[100];
+  int nota;
 } Examen;
 
 typedef struct {
-  int codigo;
-  int tipo;
-  int puntaje;
-} Nota;
-
-typedef struct {
-  int Id;
-  char nombre[50];
-} Carrera;
+  int id;
+  char nombre[100];
+} Tipo;
 
 typedef struct {
   int Id;
   char nombre[50];
   char apellido[50];
-  Carrera carrera;
-  Examen examen[10];
-  int numExamen;
+  char carrera[100];
 } Alumno;
 
-Alumno *agregar_alumno(Alumno *lista, int *capacidad, int *total,
-                       Alumno nuevo) {
-  if (*total >= *capacidad) {
-    *capacidad = (*capacidad == 0)
-                     ? 2
-                     : (*capacidad * 2); // Soporta capacidad inicial cero
-    Alumno *nueva_lista = realloc(lista, (*capacidad) * sizeof(Alumno));
-    if (!nueva_lista) {
-      printf("❌ Error al redimensionar la lista\n");
-      exit(EXIT_FAILURE);
-    }
-    lista = nueva_lista;
-  }
-
-  lista[*total] = nuevo;
-  (*total)++;
-  return lista;
-}
-
-int leer_alumnos(const char *archivo, Alumno **lista, int *capacidad) {
-  FILE *f = fopen(archivo, "r");
-  if (!f) {
-    printf("❌ Error al abrir el archivo.\n");
+int leer_alumno(char *archivo, Alumno alumnos[]) {
+  FILE *fp = fopen(archivo, "r");
+  if (fp == NULL) {
+    printf("No se pudo abrir el archivo.\n");
     return 0;
   }
 
-  char linea[256];
-  int total = 0;
+  char linea[200];
+  int contador = 0;
 
-  while (fgets(linea, sizeof(linea), f)) {
-    Alumno nuevo;
-    char *token;
+  while (fgets(linea, sizeof(linea), fp)) {
+    linea[strcspn(linea, "\n")] = '\0'; // Eliminar el salto de línea
 
-    // ID
-    token = strtok(linea, ",");
-    if (!token)
-      continue;
-    nuevo.Id = atoi(token);
+    char nombreCompleto[100];
+    Alumno *a = &alumnos[contador];
 
-    // Nombre y apellido
-    token = strtok(NULL, ",");
-    if (!token)
-      continue;
-    sscanf(token, " %49s %49s", nuevo.nombre, nuevo.apellido);
-
-    // Carrera
-    token = strtok(NULL, "\n");
-    if (!token)
-      continue;
-    strncpy(nuevo.carrera.nombre, token, sizeof(nuevo.carrera.nombre) - 1);
-    nuevo.carrera.nombre[sizeof(nuevo.carrera.nombre) - 1] = '\0';
-
-    *lista = agregar_alumno(*lista, capacidad, &total, nuevo);
-  }
-
-  fclose(f);
-  return total;
-}
-
-void cargar_examenes(const char *archivo, Alumno *alumnos, int total) {
-  Nota nota;
-  FILE *f = fopen(archivo, "r");
-  if (!f) {
-    printf("❌ Error al abrir el archivo.\n");
-    return;
-  }
-
-  while (fscanf(f, "%d %d %d", &nota.codigo, &nota.tipo, &nota.puntaje) == 3) {
-    for (int i = 0; i < total; i++) {
-      if (alumnos[i].Id == nota.codigo) {
-        int idx = alumnos[i].numExamen;
-        if (idx < 10) { // evitar desbordamiento
-          alumnos[i].examen[idx].id = nota.codigo;
-          alumnos[i].examen[idx].nota = nota.puntaje;
-          alumnos[i].examen[idx].tipo = nota.tipo;
-          alumnos[i].numExamen++;
-        }
-        break;
+    if (sscanf(linea, "%d, %[A-Za-z ] , %[^\n]", &a->Id, nombreCompleto,
+               a->carrera) == 3) {
+      // Separar nombre y apellido desde el último espacio
+      char *apellidoPtr = strrchr(nombreCompleto, ' ');
+      if (apellidoPtr != NULL) {
+        *apellidoPtr = '\0'; // Termina el nombre
+        apellidoPtr++;       // Apunta al inicio del apellido
+        strcpy(a->nombre, nombreCompleto);
+        strcpy(a->apellido, apellidoPtr);
+      } else {
+        strcpy(a->nombre, nombreCompleto);
+        a->apellido[0] = '\0';
       }
+
+      printf("ID: %d\nNombre: %s %s\nCarrera: %s\n\n", a->Id, a->nombre,
+             a->apellido, a->carrera);
+      contador++;
+      if (contador >= 100)
+        break;
     }
   }
 
-  fclose(f);
+  fclose(fp);
+  return contador;
 }
-int main() {
-  Alumno *lista = NULL;
-  int capacidad = 0;
 
-  int total = leer_alumnos("alumnos.txt", &lista, &capacidad);
-
-  printf("Se leyeron %d alumnos:\n\n", total);
-
-  for (int i = 0; i < total; i++) {
-    printf("• %s %s - %s\n", lista[i].nombre, lista[i].apellido,
-           lista[i].carrera.nombre);
+int obtener_tipos(char *archivo, Tipo tipos[], int max) {
+  FILE *fp = fopen(archivo, "r");
+  if (fp == NULL) {
+    printf("No se pudo abrir el archivo.\n");
+    return 0;
   }
 
-  cargar_examenes("nota.txt", lista, total);
+  Tipo tipoExamen;
+  int contador = 0;
 
-  free(lista);
+  while (fscanf(fp, "%d, %[^\n]\n", &tipoExamen.id, tipoExamen.nombre) == 2) {
+    if (contador >= max)
+      break;
+
+    tipos[contador] = tipoExamen;
+    contador++;
+  }
+
+  fclose(fp);
+  return contador;
+}
+
+int leer_examene(char *archivo, Examen examenes[], int max) {
+  FILE *fp = fopen(archivo, "r");
+  if (fp == NULL) {
+    printf("No se pudo abrir el archivo.\n");
+    return 0;
+  }
+  Examen examen;
+  char linea[200];
+  int contador = 0;
+
+  int idTipo;
+  Tipo tipos[100];
+  int totalTipo = obtener_tipos("tipo_examen.txt", tipos, 100);
+
+  while (fscanf(fp, "%d,%d,%d\n", &examen.id, &idTipo, &examen.nota) == 3) {
+    if (examen.nota > 100) {
+      printf("Error: un examen tiene más de 100 puntos (ID: %d).\n", examen.id);
+      exit(1);
+    }
+    printf("DEBUG - Cargado examen ID: %d, Tipo: %d, Nota: %d\n", examen.id,
+           idTipo, examen.nota);
+
+    // Buscar el nombre del tipo
+    int encontrado = 0;
+    for (int i = 0; i < totalTipo; i++) {
+      if (tipos[i].id == idTipo) {
+        strcpy(examen.tipo, tipos[i].nombre);
+        encontrado = 1;
+        break;
+      }
+    }
+
+    if (!encontrado) {
+      strcpy(examen.tipo, "Desconocido");
+    }
+
+    printf("DEBUG - Cargado examen desde el struct: %d, Tipo: %s, Nota: %d\n",
+           examen.id, examen.tipo, examen.nota);
+
+    examenes[contador] = examen;
+    contador++;
+    if (contador >= max)
+      break;
+  }
+  return contador;
+}
+
+int main() {
+  Alumno alumnos[100];
+  Examen examenes[100];
+  int totalAlumnos = leer_alumno("alumnos.txt", alumnos);
+  int totalExamenes = leer_examene("notas.txt", examenes, 100);
+  /*
+  // Ejemplo: imprimir todos los alumnos
+  for (int i = 0; i < totalAlumnos; i++) {
+    printf("Alumno #%d: %s %s - %s\n", alumnos[i].Id, alumnos[i].nombre,
+           alumnos[i].apellido, alumnos[i].carrera);
+  }
+
+  for (int i = 0; i < totalExamenes; i++) {
+    printf("Examen #%d: tipo %s, nota %d\n", examenes[i].id, examenes[i].tipo,
+           examenes[i].nota);
+  }*/
+
   return 0;
 }
