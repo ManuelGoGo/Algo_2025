@@ -5,6 +5,7 @@
 typedef struct {
   int id;
   char tipo[100];
+  int idtipo;
   int nota;
 } Examen;
 
@@ -50,8 +51,6 @@ int leer_alumno(char *archivo, Alumno alumnos[]) {
         a->apellido[0] = '\0';
       }
 
-      printf("ID: %d\nNombre: %s %s\nCarrera: %s\n\n", a->Id, a->nombre,
-             a->apellido, a->carrera);
       contador++;
       if (contador >= 100)
         break;
@@ -99,12 +98,13 @@ int leer_examene(char *archivo, Examen examenes[], int max) {
   int totalTipo = obtener_tipos("tipo_examen.txt", tipos, 100);
 
   while (fscanf(fp, "%d,%d,%d\n", &examen.id, &idTipo, &examen.nota) == 3) {
-    if (examen.nota > 100) {
+    if (examen.nota > 100 || examen.nota < 0) {
       printf("Error: un examen tiene más de 100 puntos (ID: %d).\n", examen.id);
       exit(1);
     }
-    printf("DEBUG - Cargado examen ID: %d, Tipo: %d, Nota: %d\n", examen.id,
-           idTipo, examen.nota);
+    //    printf("DEBUG - Cargado examen ID: %d, Tipo: %d, Nota: %d\n",
+    //    examen.id,
+    //          idTipo, examen.nota);
 
     // Buscar el nombre del tipo
     int encontrado = 0;
@@ -120,9 +120,10 @@ int leer_examene(char *archivo, Examen examenes[], int max) {
       strcpy(examen.tipo, "Desconocido");
     }
 
-    printf("DEBUG - Cargado examen desde el struct: %d, Tipo: %s, Nota: %d\n",
-           examen.id, examen.tipo, examen.nota);
-
+    //  printf("DEBUG - Cargado examen desde el struct: %d, Tipo: %s, Nota:
+    //  %d\n",
+    //        examen.id, examen.tipo, examen.nota);
+    examen.idtipo = idTipo;
     examenes[contador] = examen;
     contador++;
     if (contador >= max)
@@ -136,7 +137,7 @@ int main() {
   Examen examenes[100];
   int totalAlumnos = leer_alumno("alumnos.txt", alumnos);
   int totalExamenes = leer_examene("notas.txt", examenes, 100);
-  /*
+
   // Ejemplo: imprimir todos los alumnos
   for (int i = 0; i < totalAlumnos; i++) {
     printf("Alumno #%d: %s %s - %s\n", alumnos[i].Id, alumnos[i].nombre,
@@ -144,9 +145,9 @@ int main() {
   }
 
   for (int i = 0; i < totalExamenes; i++) {
-    printf("Examen #%d: tipo %s, nota %d\n", examenes[i].id, examenes[i].tipo,
+    printf("Examen id %d: tipo %s, nota %d\n", examenes[i].id, examenes[i].tipo,
            examenes[i].nota);
-  }*/
+  }
 
   return 0;
 }
