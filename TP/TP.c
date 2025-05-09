@@ -141,40 +141,6 @@ int leer_examene(char *archivo, Examen examenes[], int max) {
   return contador;
 }
 
-void output_estadisticas(Alumno alumnos[], int totalAlumnos, char *archivo) {
-  FILE *fp = fopen(archivo, "w"); // "w" crea el archivo si no existe
-  if (fp == NULL) {
-    printf("Error: No se pudo crear el archivo '%s'.\n", archivo);
-    return;
-  }
-
-  fprintf(fp, "Estadisticas de la materia:\n");
-  fprintf(fp, "Cantidad de alumnos: %d:\n",
-          totalAlumnos); // Cantidad de alumnos
-
-  int totalAplazados = 0;
-  int totalPrimerFinal = 0;
-
-  for (int a = 0; a < totalAlumnos; a++) {
-    if (alumnos[a].puntaje.primerFinal >= 60) {
-      printf("Alumno %d: %s aprobo el primer final\n", alumnos[a].Id,
-             alumnos[a].nombre);
-      totalPrimerFinal++;
-    }
-  }
-  fprintf(fp, "Cantidad de alumnos que aprobaron en primer final: %d\n",
-          totalPrimerFinal);
-}
-/*estadı́sticas de la materia:
-Cantidad de alumnos que aprobaron en primer final: X
-Cantidad de alumnos que aprobaron en segundo final: X
-Cantidad de alumnos que no rindieron final, ni el primero, ni el segundo: X
-Cantidad de alumnos que aprobaron la materia por carrera: X
-Porcentaje de almunos aprobados: X
-Porcentaje de almunos aplazados: X
-Promedio general de calificaciones de la materia: X
-*/
-
 void cargar_notas(Alumno alumno[], int totalAlumnos, Examen examene[],
                   int totalExamenes) {
   for (int alu = 0; alu < totalAlumnos; alu++) {
@@ -201,6 +167,64 @@ void cargar_notas(Alumno alumno[], int totalAlumnos, Examen examene[],
     }
   }
 }
+
+void output_estadisticas(Alumno alumnos[], int totalAlumnos, char *archivo) {
+  FILE *fp = fopen(archivo, "w"); // "w" crea el archivo si no existe
+  if (fp == NULL) {
+    printf("Error: No se pudo crear el archivo '%s'.\n", archivo);
+    return;
+  }
+
+  fprintf(fp, "Estadisticas de la materia:\n");
+  fprintf(fp, "Cantidad de alumnos: %d:\n",
+          totalAlumnos); // Cantidad de alumnos
+
+  int totalPrimerFinal = 0;
+  int totalSegundoFinal = 0;
+  int noRindieronFinal = 0;
+
+  for (int a = 0; a < totalAlumnos; a++) {
+
+    if (alumnos[a].puntaje.primerFinal >= 60) {
+      printf("Alumno %d: %s aprobo el primer final\n", alumnos[a].Id,
+             alumnos[a].nombre);
+      totalPrimerFinal++;
+    }
+
+    if (alumnos[a].puntaje.segundoFinal >= 60) {
+      printf("Alumno %d: %s aprobo el  segundo Final\n", alumnos[a].Id,
+             alumnos[a].nombre);
+      totalSegundoFinal++;
+      printf("Alumno aprobados segundo final: %d\n", totalSegundoFinal);
+    }
+
+    if (alumnos[a].puntaje.primerFinal == NULL &&
+        alumnos[a].puntaje.segundoFinal == NULL) {
+      noRindieronFinal++;
+      printf("Alumno que no rindieron final: %d\n", noRindieronFinal);
+    }
+  }
+
+  fprintf(
+      fp, "Cantidad de alumnos que aprobaron en primer final: %d\n",
+      totalPrimerFinal); // Cantidad de alumnos que aprobaron en primer final: X
+  fprintf(fp, "Cantidad de alumnos que aprobaron en segundo final: %d\n",
+          totalSegundoFinal); // Cantidad de alumnos que aprobaron en segundo
+                              // final: X
+
+  fprintf(fp,
+          "Cantidad de alumnos que no rindieron final, ni el primero, ni el "
+          "segundo: %d\n",
+          noRindieronFinal); // Cantidad de alumnos que no rindieron final, ni
+                             // el primero, ni el segundo: X
+}
+/*estadı́sticas de la materia:
+Cantidad de alumnos que aprobaron la materia por carrera: X
+Porcentaje de almunos aprobados: X
+Porcentaje de almunos aplazados: X
+Promedio general de calificaciones de la materia: X
+*/
+
 int main() {
   Alumno alumnos[100];
   Examen examenes[100];
@@ -211,7 +235,7 @@ int main() {
 
   output_estadisticas(alumnos, totalAlumnos, "estadisticas.txt");
   // Ejemplo: imprimir todos los alumnos
-  for (int i = 0; i < totalAlumnos; i++) {
+  /*for (int i = 0; i < totalAlumnos; i++) {
     printf("Alumno #%d: %s %s - %s\n", alumnos[i].Id, alumnos[i].nombre,
            alumnos[i].apellido, alumnos[i].carrera);
   }
@@ -220,6 +244,6 @@ int main() {
     printf("Examen id %d: tipo %s, nota %d\n", examenes[i].id, examenes[i].tipo,
            examenes[i].nota);
   }
-
+*/
   return 0;
 }
