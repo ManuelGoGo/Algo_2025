@@ -1,0 +1,3 @@
+Estadisticas de la materia:
+Cantidad de alumnos: 5:
+Cantidad de alumnos que aprobaron en primer final: 1

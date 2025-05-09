@@ -15,10 +15,19 @@ typedef struct {
 } Tipo;
 
 typedef struct {
+  int primerParcial;
+  int segundoParcial;
+  int tercerParcial;
+  int primerFinal;
+  int segundoFinal;
+} Puntaje;
+
+typedef struct {
   int Id;
   char nombre[50];
   char apellido[50];
   char carrera[100];
+  Puntaje puntaje;
 } Alumno;
 
 int leer_alumno(char *archivo, Alumno alumnos[]) {
@@ -132,12 +141,75 @@ int leer_examene(char *archivo, Examen examenes[], int max) {
   return contador;
 }
 
+void output_estadisticas(Alumno alumnos[], int totalAlumnos, char *archivo) {
+  FILE *fp = fopen(archivo, "w"); // "w" crea el archivo si no existe
+  if (fp == NULL) {
+    printf("Error: No se pudo crear el archivo '%s'.\n", archivo);
+    return;
+  }
+
+  fprintf(fp, "Estadisticas de la materia:\n");
+  fprintf(fp, "Cantidad de alumnos: %d:\n",
+          totalAlumnos); // Cantidad de alumnos
+
+  int totalAplazados = 0;
+  int totalPrimerFinal = 0;
+
+  for (int a = 0; a < totalAlumnos; a++) {
+    if (alumnos[a].puntaje.primerFinal >= 60) {
+      printf("Alumno %d: %s aprobo el primer final\n", alumnos[a].Id,
+             alumnos[a].nombre);
+      totalPrimerFinal++;
+    }
+  }
+  fprintf(fp, "Cantidad de alumnos que aprobaron en primer final: %d\n",
+          totalPrimerFinal);
+}
+/*estadı́sticas de la materia:
+Cantidad de alumnos que aprobaron en primer final: X
+Cantidad de alumnos que aprobaron en segundo final: X
+Cantidad de alumnos que no rindieron final, ni el primero, ni el segundo: X
+Cantidad de alumnos que aprobaron la materia por carrera: X
+Porcentaje de almunos aprobados: X
+Porcentaje de almunos aplazados: X
+Promedio general de calificaciones de la materia: X
+*/
+
+void cargar_notas(Alumno alumno[], int totalAlumnos, Examen examene[],
+                  int totalExamenes) {
+  for (int alu = 0; alu < totalAlumnos; alu++) {
+    for (int ex = 0; ex < totalExamenes; ex++) {
+      if (alumno[alu].Id == examene[ex].id) {
+        switch (examene[ex].idtipo) {
+        case 1:
+          alumno[alu].puntaje.primerParcial = examene[ex].nota;
+          break;
+        case 2:
+          alumno[alu].puntaje.segundoParcial = examene[ex].nota;
+          break;
+        case 3:
+          alumno[alu].puntaje.tercerParcial = examene[ex].nota;
+          break;
+        case 4:
+          alumno[alu].puntaje.primerFinal = examene[ex].nota;
+          break;
+        case 5:
+          alumno[alu].puntaje.segundoFinal = examene[ex].nota;
+          break;
+        }
+      }
+    }
+  }
+}
 int main() {
   Alumno alumnos[100];
   Examen examenes[100];
   int totalAlumnos = leer_alumno("alumnos.txt", alumnos);
   int totalExamenes = leer_examene("notas.txt", examenes, 100);
 
+  cargar_notas(alumnos, totalAlumnos, examenes, totalExamenes);
+
+  output_estadisticas(alumnos, totalAlumnos, "estadisticas.txt");
   // Ejemplo: imprimir todos los alumnos
   for (int i = 0; i < totalAlumnos; i++) {
     printf("Alumno #%d: %s %s - %s\n", alumnos[i].Id, alumnos[i].nombre,
