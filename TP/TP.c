@@ -46,6 +46,13 @@ int leer_alumno(char *archivo, Alumno alumnos[]) {
     char nombreCompleto[100];
     Alumno *a = &alumnos[contador];
 
+    // Inicializar puntajes en -1
+    a->puntaje.primerParcial = -1;
+    a->puntaje.segundoParcial = -1;
+    a->puntaje.tercerParcial = -1;
+    a->puntaje.primerFinal = -1;
+    a->puntaje.segundoFinal = -1;
+
     if (sscanf(linea, "%d, %[A-Za-z ] , %[^\n]", &a->Id, nombreCompleto,
                a->carrera) == 3) {
       // Separar nombre y apellido desde el último espacio
@@ -168,6 +175,42 @@ void cargar_notas(Alumno alumno[], int totalAlumnos, Examen examene[],
   }
 }
 
+float puntaje(Alumno alumno) {
+  int puntajePonderado =
+      alumno.puntaje.primerFinal + alumno.puntaje.segundoFinal;
+  if (puntajePonderado >= 100) {
+
+    if (alumno.puntaje.primerFinal == -1 && alumno.puntaje.segundoFinal != -1) {
+      return puntajePonderado * 0.4f + alumno.puntaje.segundoFinal * 0.6f;
+
+    } else if (alumno.puntaje.segundoFinal == -1 &&
+               alumno.puntaje.primerFinal != -1) {
+      return puntajePonderado * 0.4f + alumno.puntaje.primerFinal * 0.6f;
+
+    } else {
+      return 0;
+    }
+  } else {
+    if (alumno.puntaje.primerParcial <= alumno.puntaje.segundoParcial) {
+      puntajePonderado =
+          alumno.puntaje.tercerParcial + alumno.puntaje.segundoParcial;
+    } else if (alumno.puntaje.primerParcial > alumno.puntaje.segundoParcial) {
+      puntajePonderado =
+          alumno.puntaje.tercerParcial + alumno.puntaje.primerParcial;
+    }
+    if (puntajePonderado >= 100) {
+      if (alumno.puntaje.primerParcial == -1) {
+        return puntajePonderado * 0.4f + alumno.puntaje.segundoParcial * 0.6f;
+      } else if (alumno.puntaje.segundoParcial == -1) {
+        return puntajePonderado * 0.4f + alumno.puntaje.primerParcial * 0.6f;
+      }
+    } else {
+      return 0;
+    }
+    return 0;
+  }
+}
+
 void output_estadisticas(Alumno alumnos[], int totalAlumnos, char *archivo) {
   FILE *fp = fopen(archivo, "w"); // "w" crea el archivo si no existe
   if (fp == NULL) {
@@ -198,8 +241,8 @@ void output_estadisticas(Alumno alumnos[], int totalAlumnos, char *archivo) {
       printf("Alumno aprobados segundo final: %d\n", totalSegundoFinal);
     }
 
-    if (alumnos[a].puntaje.primerFinal == NULL &&
-        alumnos[a].puntaje.segundoFinal == NULL) {
+    if (alumnos[a].puntaje.primerFinal == -1 &&
+        alumnos[a].puntaje.segundoFinal == -1) {
       noRindieronFinal++;
       printf("Alumno que no rindieron final: %d\n", noRindieronFinal);
     }
@@ -217,6 +260,11 @@ void output_estadisticas(Alumno alumnos[], int totalAlumnos, char *archivo) {
           "segundo: %d\n",
           noRindieronFinal); // Cantidad de alumnos que no rindieron final, ni
                              // el primero, ni el segundo: X
+
+  int aprobados = 0;
+  for (int con = 0; con < totalAlumnos; con++) {
+    puntaje(alumnos[con]);
+  }
 }
 /*estadı́sticas de la materia:
 Cantidad de alumnos que aprobaron la materia por carrera: X
