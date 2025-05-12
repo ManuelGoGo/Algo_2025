@@ -2,4 +2,18 @@ Estadisticas de la materia:
 Cantidad de alumnos: 5:
 Cantidad de alumnos que aprobaron en primer final: 1
 Cantidad de alumnos que aprobaron en segundo final: 3
-Cantidad de alumnos que no rindieron final, ni el primero, ni el segundo: 0
+Cantidad de alumnos que no rindieron final, ni el primero, ni el segundo: 2
+Cantidad de alumnos que aprobaron la materia por carrera:
+- Ingeniería en Electrónica: 1
+- Ingeniería en Electricidad: 1
+- Ingeniería Aeronaútica: 1
+- Ingeniería en Energía: 1
+- Ingeniería en Ciencias de los Materiales: 0
+Porcentaje de almunos aprobados: 80.00%
+Porcentaje de almunos aplazados: 20.00%
+Promedio de alumnos que aprobaron la materia por carrera:
+- Ingeniería en Electrónica: 100.00%
+- Ingeniería en Electricidad: 100.00%
+- Ingeniería Aeronaútica: 100.00%
+- Ingeniería en Energía: 100.00%
+- Ingeniería en Ciencias de los Materiales: 0.00%

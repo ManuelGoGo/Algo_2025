@@ -30,6 +30,12 @@ typedef struct {
   Puntaje puntaje;
 } Alumno;
 
+typedef struct {
+  char carrera[100];
+  int cantidadAprobados;
+  int cantidadInscritos;
+} CarreraEstadistica;
+
 int leer_alumno(char *archivo, Alumno alumnos[]) {
   FILE *fp = fopen(archivo, "r");
   if (fp == NULL) {
@@ -178,6 +184,8 @@ void cargar_notas(Alumno alumno[], int totalAlumnos, Examen examene[],
 float puntaje(Alumno alumno) {
   int cantidad = 0;
   float promedioParcial = 0;
+  int sumaParciales = 0;
+
   if (alumno.puntaje.primerParcial > 0) {
     cantidad++;
   }
@@ -187,33 +195,75 @@ float puntaje(Alumno alumno) {
   if (alumno.puntaje.tercerParcial > 0) {
     cantidad++;
   }
+
   printf("El alumno %s tiene %d parciales\n", alumno.nombre, cantidad);
 
   if (cantidad == 3) {
     if (alumno.puntaje.primerParcial <= alumno.puntaje.segundoParcial) {
-      promedioParcial =
-          (alumno.puntaje.tercerParcial + alumno.puntaje.segundoParcial) / 2;
+      promedioParcial = (float)(alumno.puntaje.tercerParcial +
+                                alumno.puntaje.segundoParcial) /
+                        2;
     } else {
-      promedioParcial =
-          (alumno.puntaje.segundoParcial + alumno.puntaje.tercerParcial) / 2;
+      promedioParcial = (float)(alumno.puntaje.segundoParcial +
+                                alumno.puntaje.tercerParcial) /
+                        2;
     }
   } else if (cantidad == 2) {
-    promedioParcial =
-        (alumno.puntaje.primerParcial + alumno.puntaje.segundoParcial) / 2;
+    if (alumno.puntaje.primerParcial > 0) {
+      sumaParciales += alumno.puntaje.primerParcial;
+    }
+
+    if (alumno.puntaje.segundoParcial > 0) {
+      sumaParciales += alumno.puntaje.segundoParcial;
+    }
+
+    if (alumno.puntaje.tercerParcial > 0) {
+      sumaParciales += alumno.puntaje.tercerParcial;
+    }
+
+    promedioParcial = (float)sumaParciales / 2;
   } else {
     return 0;
   }
 
   if (alumno.puntaje.primerFinal >= 50) {
 
-    return promedioParcial * 0.4f + alumno.puntaje.primerFinal * 0.6f;
+    return promedioParcial * 0.4f + (float)alumno.puntaje.primerFinal * 0.6f;
 
   } else if (alumno.puntaje.segundoFinal >= 50) {
 
-    return promedioParcial * 0.4f + alumno.puntaje.segundoFinal * 0.6f;
+    return promedioParcial * 0.4f + (float)alumno.puntaje.segundoFinal * 0.6f;
   } else {
     return 0;
   }
+}
+
+int alumnos_aprobados_por_carrera(Alumno alumnos[], int totalAlumnos,
+                                  CarreraEstadistica estadisticas[]) {
+  int totalCarreras = 0;
+
+  for (int i = 0; i < totalAlumnos; i++) {
+    int encontrada = 0;
+    for (int j = 0; j < totalCarreras; j++) {
+      if (strcmp(estadisticas[j].carrera, alumnos[i].carrera) == 0) {
+        estadisticas[j].cantidadInscritos++;
+        if (puntaje(alumnos[i]) >= 60) {
+          estadisticas[j].cantidadAprobados++;
+        }
+        encontrada = 1;
+        break;
+      }
+    }
+    if (!encontrada && totalCarreras < 100) {
+      strcpy(estadisticas[totalCarreras].carrera, alumnos[i].carrera);
+      estadisticas[totalCarreras].cantidadInscritos = 1;
+      estadisticas[totalCarreras].cantidadAprobados =
+          (puntaje(alumnos[i]) >= 60) ? 1 : 0;
+      totalCarreras++;
+    }
+  }
+
+  return totalCarreras;
 }
 
 void output_estadisticas(Alumno alumnos[], int totalAlumnos, char *archivo) {
@@ -264,24 +314,100 @@ void output_estadisticas(Alumno alumnos[], int totalAlumnos, char *archivo) {
           "segundo: %d\n",
           noRindieronFinal); // Cantidad de alumnos que no rindieron final, ni
 
-  fprintf(
-      fp,
-      "Cantidad de alumnos que aprobaron la materia por carrera: %d\n"); // Cantidad
-                                                                         // de
-                                                                         // alumnos
-                                                                         // que
-                                                                         // aprobaron
-                                                                         // la
-                                                                         // materia
-                                                                         // por
-                                                                         // carrera:
-                                                                         // X
+  CarreraEstadistica estadisticas[100];
+  int totalCarreras =
+      alumnos_aprobados_por_carrera(alumnos, totalAlumnos, estadisticas);
+
+  fprintf(fp, "Cantidad de alumnos que aprobaron la materia por carrera:\n");
+  for (int i = 0; i < totalCarreras; i++) {
+    fprintf(fp, "- %s: %d\n", estadisticas[i].carrera,
+            estadisticas[i].cantidadAprobados);
+  }
+  fprintf(fp, "Porcentaje de almunos aprobados: %0.2f%\n",
+          (float)totalpasaron / totalAlumnos * 100);
+  fprintf(fp, "Porcentaje de almunos aplazados: %0.2f%\n",
+          (1 - (float)totalpasaron / totalAlumnos) * 100);
+
+  fprintf(fp, "Promedio de alumnos que aprobaron la materia por carrera:\n");
+  for (int i = 0; i < totalCarreras; i++) {
+    fprintf(fp, "- %s: %0.2f%\n", estadisticas[i].carrera,
+            (float)(estadisticas[i].cantidadAprobados * 100) /
+                estadisticas[i].cantidadInscritos);
+  }
 }
-/*estadı́sticas de la materia:
- Porcentaje de almunos aprobados: X
- Porcentaje de almunos aplazados: X
- Promedio general de calificaciones de la materia: X
- */
+
+int Nota_final(float promedio) {
+  if (promedio >= 90) {
+    return 5;
+  } else if (promedio >= 80) {
+    return 4;
+  } else if (promedio >= 70) {
+    return 3;
+  } else if (promedio >= 60) {
+    return 2;
+  } else {
+    return 1;
+  }
+}
+void generar_calificaciones_txt(Alumno alumnos[], int totalAlumnos,
+                                const char *archivo) {
+  FILE *fp = fopen(archivo, "w");
+  if (fp == NULL) {
+    printf("Error al crear el archivo '%s'\n", archivo);
+    return;
+  }
+
+  fprintf(fp, "Alumnos que aprobaron la materia:\n");
+
+  // --- Primer Final ---
+  fprintf(fp, "\nPrimer Final\n");
+  fprintf(fp, "Nombre Alumno     Prom Ponderado     Examen Final     "
+              "Calificación\n");
+
+  for (int i = 0; i < totalAlumnos; i++) {
+    int calificacion = Nota_final(puntaje(alumnos[i]));
+
+    if (alumnos[i].puntaje.primerFinal >= 50 && puntaje(alumnos[i]) >= 60) {
+      fprintf(fp, "%s %s         %.2f             %d                  %d",
+              alumnos[i].nombre, alumnos[i].apellido, puntaje(alumnos[i]),
+              alumnos[i].puntaje.primerFinal, calificacion);
+    }
+  }
+
+  fprintf(fp, "\n--------------------------------------------------------\n");
+  // --- Segundo Final ---
+  fprintf(fp, "\nSegundo Final\n");
+  fprintf(fp, "Nombre Alumno     Prom Ponderado     Examen Final     "
+              "Calificación\n");
+
+  for (int i = 0; i < totalAlumnos; i++) {
+    int calificacion = Nota_final(puntaje(alumnos[i]));
+
+    if (alumnos[i].puntaje.segundoFinal >= 50 && puntaje(alumnos[i]) >= 60) {
+      fprintf(fp, "%s %s         %0.2f             %d                  %d",
+              alumnos[i].nombre, alumnos[i].apellido, puntaje(alumnos[i]),
+              alumnos[i].puntaje.segundoFinal, Nota_final(puntaje(alumnos[i])));
+    }
+  }
+  fprintf(fp, "\n--------------------------------------------------------\n");
+  // --- No Aprobados ---
+  fprintf(fp, "\nAlumnos que no aprobaron la materia:\n");
+  fprintf(fp, "Nombre Alumno\t1er Parcial\t2do Parcial\t3er Parcial\t1er "
+              "Final\t2do Final\n");
+
+  for (int i = 0; i < totalAlumnos; i++) {
+    float calificacion = puntaje(alumnos[i]);
+    if (calificacion < 60) {
+      fprintf(fp, "%s\t%d\t\t%d\t\t%d\t\t%d\t\t%d\n", alumnos[i].nombre,
+              alumnos[i].puntaje.primerParcial,
+              alumnos[i].puntaje.segundoParcial,
+              alumnos[i].puntaje.tercerParcial, alumnos[i].puntaje.primerFinal,
+              alumnos[i].puntaje.segundoFinal);
+    }
+  }
+
+  fclose(fp);
+}
 
 int main() {
   Alumno alumnos[100];
@@ -292,6 +418,7 @@ int main() {
   cargar_notas(alumnos, totalAlumnos, examenes, totalExamenes);
 
   output_estadisticas(alumnos, totalAlumnos, "estadisticas.txt");
+  generar_calificaciones_txt(alumnos, totalAlumnos, "calificaciones.txt");
 
   return 0;
 }
