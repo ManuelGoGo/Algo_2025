@@ -2,4 +2,4 @@ Estadisticas de la materia:
 Cantidad de alumnos: 5:
 Cantidad de alumnos que aprobaron en primer final: 1
 Cantidad de alumnos que aprobaron en segundo final: 3
-Cantidad de alumnos que no rindieron final, ni el primero, ni el segundo: 1
+Cantidad de alumnos que no rindieron final, ni el primero, ni el segundo: 0

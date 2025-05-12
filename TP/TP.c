@@ -176,37 +176,42 @@ void cargar_notas(Alumno alumno[], int totalAlumnos, Examen examene[],
 }
 
 float puntaje(Alumno alumno) {
-  int puntajePonderado =
-      alumno.puntaje.primerFinal + alumno.puntaje.segundoFinal;
-  if (puntajePonderado >= 100) {
+  int cantidad = 0;
+  float promedioParcial = 0;
+  if (alumno.puntaje.primerParcial > 0) {
+    cantidad++;
+  }
+  if (alumno.puntaje.segundoParcial > 0) {
+    cantidad++;
+  }
+  if (alumno.puntaje.tercerParcial > 0) {
+    cantidad++;
+  }
+  printf("El alumno %s tiene %d parciales\n", alumno.nombre, cantidad);
 
-    if (alumno.puntaje.primerFinal == -1 && alumno.puntaje.segundoFinal != -1) {
-      return puntajePonderado * 0.4f + alumno.puntaje.segundoFinal * 0.6f;
-
-    } else if (alumno.puntaje.segundoFinal == -1 &&
-               alumno.puntaje.primerFinal != -1) {
-      return puntajePonderado * 0.4f + alumno.puntaje.primerFinal * 0.6f;
-
-    } else {
-      return 0;
-    }
-  } else {
+  if (cantidad == 3) {
     if (alumno.puntaje.primerParcial <= alumno.puntaje.segundoParcial) {
-      puntajePonderado =
-          alumno.puntaje.tercerParcial + alumno.puntaje.segundoParcial;
-    } else if (alumno.puntaje.primerParcial > alumno.puntaje.segundoParcial) {
-      puntajePonderado =
-          alumno.puntaje.tercerParcial + alumno.puntaje.primerParcial;
-    }
-    if (puntajePonderado >= 100) {
-      if (alumno.puntaje.primerParcial == -1) {
-        return puntajePonderado * 0.4f + alumno.puntaje.segundoParcial * 0.6f;
-      } else if (alumno.puntaje.segundoParcial == -1) {
-        return puntajePonderado * 0.4f + alumno.puntaje.primerParcial * 0.6f;
-      }
+      promedioParcial =
+          (alumno.puntaje.tercerParcial + alumno.puntaje.segundoParcial) / 2;
     } else {
-      return 0;
+      promedioParcial =
+          (alumno.puntaje.segundoParcial + alumno.puntaje.tercerParcial) / 2;
     }
+  } else if (cantidad == 2) {
+    promedioParcial =
+        (alumno.puntaje.primerParcial + alumno.puntaje.segundoParcial) / 2;
+  } else {
+    return 0;
+  }
+
+  if (alumno.puntaje.primerFinal >= 50) {
+
+    return promedioParcial * 0.4f + alumno.puntaje.primerFinal * 0.6f;
+
+  } else if (alumno.puntaje.segundoFinal >= 50) {
+
+    return promedioParcial * 0.4f + alumno.puntaje.segundoFinal * 0.6f;
+  } else {
     return 0;
   }
 }
@@ -219,38 +224,37 @@ void output_estadisticas(Alumno alumnos[], int totalAlumnos, char *archivo) {
   }
 
   fprintf(fp, "Estadisticas de la materia:\n");
-  fprintf(fp, "Cantidad de alumnos: %d:\n",
-          totalAlumnos); // Cantidad de alumnos
 
   int totalPrimerFinal = 0;
   int totalSegundoFinal = 0;
   int noRindieronFinal = 0;
+  int totalpasaron = 0;
 
   for (int a = 0; a < totalAlumnos; a++) {
-
-    if (alumnos[a].puntaje.primerFinal >= 60) {
-      printf("Alumno %d: %s aprobo el primer final\n", alumnos[a].Id,
-             alumnos[a].nombre);
+    printf("Alumno %d: %s hizo: %f \n", alumnos[a].Id, alumnos[a].nombre,
+           puntaje(alumnos[a]));
+    if (alumnos[a].puntaje.primerFinal >= 50 && puntaje(alumnos[a]) >= 60) {
       totalPrimerFinal++;
     }
 
-    if (alumnos[a].puntaje.segundoFinal >= 60) {
-      printf("Alumno %d: %s aprobo el  segundo Final\n", alumnos[a].Id,
-             alumnos[a].nombre);
+    if (alumnos[a].puntaje.segundoFinal >= 50 && puntaje(alumnos[a]) >= 60) {
       totalSegundoFinal++;
-      printf("Alumno aprobados segundo final: %d\n", totalSegundoFinal);
     }
-
-    if (alumnos[a].puntaje.primerFinal == -1 &&
+    if (puntaje(alumnos[a]) >= 60) {
+      totalpasaron++;
+    }
+    if (alumnos[a].puntaje.segundoFinal == -1 &&
         alumnos[a].puntaje.segundoFinal == -1) {
       noRindieronFinal++;
-      printf("Alumno que no rindieron final: %d\n", noRindieronFinal);
     }
   }
 
+  fprintf(fp, "Cantidad de alumnos: %d:\n",
+          totalAlumnos); // Cantidad de alumnos
   fprintf(
       fp, "Cantidad de alumnos que aprobaron en primer final: %d\n",
       totalPrimerFinal); // Cantidad de alumnos que aprobaron en primer final: X
+
   fprintf(fp, "Cantidad de alumnos que aprobaron en segundo final: %d\n",
           totalSegundoFinal); // Cantidad de alumnos que aprobaron en segundo
                               // final: X
@@ -259,19 +263,25 @@ void output_estadisticas(Alumno alumnos[], int totalAlumnos, char *archivo) {
           "Cantidad de alumnos que no rindieron final, ni el primero, ni el "
           "segundo: %d\n",
           noRindieronFinal); // Cantidad de alumnos que no rindieron final, ni
-                             // el primero, ni el segundo: X
 
-  int aprobados = 0;
-  for (int con = 0; con < totalAlumnos; con++) {
-    puntaje(alumnos[con]);
-  }
+  fprintf(
+      fp,
+      "Cantidad de alumnos que aprobaron la materia por carrera: %d\n"); // Cantidad
+                                                                         // de
+                                                                         // alumnos
+                                                                         // que
+                                                                         // aprobaron
+                                                                         // la
+                                                                         // materia
+                                                                         // por
+                                                                         // carrera:
+                                                                         // X
 }
 /*estadı́sticas de la materia:
-Cantidad de alumnos que aprobaron la materia por carrera: X
-Porcentaje de almunos aprobados: X
-Porcentaje de almunos aplazados: X
-Promedio general de calificaciones de la materia: X
-*/
+ Porcentaje de almunos aprobados: X
+ Porcentaje de almunos aplazados: X
+ Promedio general de calificaciones de la materia: X
+ */
 
 int main() {
   Alumno alumnos[100];
@@ -282,16 +292,6 @@ int main() {
   cargar_notas(alumnos, totalAlumnos, examenes, totalExamenes);
 
   output_estadisticas(alumnos, totalAlumnos, "estadisticas.txt");
-  // Ejemplo: imprimir todos los alumnos
-  /*for (int i = 0; i < totalAlumnos; i++) {
-    printf("Alumno #%d: %s %s - %s\n", alumnos[i].Id, alumnos[i].nombre,
-           alumnos[i].apellido, alumnos[i].carrera);
-  }
 
-  for (int i = 0; i < totalExamenes; i++) {
-    printf("Examen id %d: tipo %s, nota %d\n", examenes[i].id, examenes[i].tipo,
-           examenes[i].nota);
-  }
-*/
   return 0;
 }
