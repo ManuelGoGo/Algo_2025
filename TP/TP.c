@@ -111,6 +111,7 @@ int leer_examene(char *archivo, Examen examenes[], int max) {
     printf("No se pudo abrir el archivo.\n");
     return 0;
   }
+
   Examen examen;
   char linea[200];
   int contador = 0;
@@ -119,19 +120,30 @@ int leer_examene(char *archivo, Examen examenes[], int max) {
   Tipo tipos[100];
   int totalTipo = obtener_tipos("tipo_examen.txt", tipos, 100);
 
-  while (fscanf(fp, "%d,%d,%d\n", &examen.id, &idTipo, &examen.nota) == 3) {
-    if (examen.nota > 100 || examen.nota < 0) {
-      printf("Error: un examen tiene más de 100 puntos (ID: %d).\n", examen.id);
+  while (fgets(linea, sizeof(linea), fp) != NULL) {
+    int id, tipo, nota;
+    char extra;
+
+    // Validar que la línea tenga exactamente tres enteros y nada más
+    if (sscanf(linea, "%d,%d,%d %c", &id, &tipo, &nota, &extra) != 3) {
+      printf("Error: línea con formato inválido: %s", linea);
       exit(1);
     }
-    //    printf("DEBUG - Cargado examen ID: %d, Tipo: %d, Nota: %d\n",
-    //    examen.id,
-    //          idTipo, examen.nota);
 
-    // Buscar el nombre del tipo
+    if (nota < 0 || nota > 100) {
+      printf(
+          "Error: la nota del examen con ID %d está fuera de rango (0-100).\n",
+          id);
+      exit(1);
+    }
+
+    examen.id = id;
+    examen.nota = nota;
+    examen.idtipo = tipo;
+
     int encontrado = 0;
     for (int i = 0; i < totalTipo; i++) {
-      if (tipos[i].id == idTipo) {
+      if (tipos[i].id == tipo) {
         strcpy(examen.tipo, tipos[i].nombre);
         encontrado = 1;
         break;
@@ -142,18 +154,14 @@ int leer_examene(char *archivo, Examen examenes[], int max) {
       strcpy(examen.tipo, "Desconocido");
     }
 
-    //  printf("DEBUG - Cargado examen desde el struct: %d, Tipo: %s, Nota:
-    //  %d\n",
-    //        examen.id, examen.tipo, examen.nota);
-    examen.idtipo = idTipo;
-    examenes[contador] = examen;
-    contador++;
+    examenes[contador++] = examen;
     if (contador >= max)
       break;
   }
+
+  fclose(fp);
   return contador;
 }
-
 void cargar_notas(Alumno alumno[], int totalAlumnos, Examen examene[],
                   int totalExamenes) {
   for (int alu = 0; alu < totalAlumnos; alu++) {
@@ -368,7 +376,7 @@ void generar_calificaciones_txt(Alumno alumnos[], int totalAlumnos,
     int calificacion = Nota_final(puntaje(alumnos[i]));
 
     if (alumnos[i].puntaje.primerFinal >= 50 && puntaje(alumnos[i]) >= 60) {
-      fprintf(fp, "%s %s         %.2f             %d                  %d",
+      fprintf(fp, "%s %s         %.2f             %d                  %d\n",
               alumnos[i].nombre, alumnos[i].apellido, puntaje(alumnos[i]),
               alumnos[i].puntaje.primerFinal, calificacion);
     }
@@ -384,25 +392,51 @@ void generar_calificaciones_txt(Alumno alumnos[], int totalAlumnos,
     int calificacion = Nota_final(puntaje(alumnos[i]));
 
     if (alumnos[i].puntaje.segundoFinal >= 50 && puntaje(alumnos[i]) >= 60) {
-      fprintf(fp, "%s %s         %0.2f             %d                  %d",
+      fprintf(fp, "%s %s         %0.2f             %d                  %d\n",
               alumnos[i].nombre, alumnos[i].apellido, puntaje(alumnos[i]),
               alumnos[i].puntaje.segundoFinal, Nota_final(puntaje(alumnos[i])));
     }
   }
-  fprintf(fp, "\n--------------------------------------------------------\n");
+  fprintf(fp, "\n--------------------------------------------------------\n ");
   // --- No Aprobados ---
   fprintf(fp, "\nAlumnos que no aprobaron la materia:\n");
-  fprintf(fp, "Nombre Alumno\t1er Parcial\t2do Parcial\t3er Parcial\t1er "
-              "Final\t2do Final\n");
+  fprintf(fp, "Nombre Alumno   1erParcial   2doParcial    3erParcial    "
+              "1erFinal    2do Final\n");
 
   for (int i = 0; i < totalAlumnos; i++) {
     float calificacion = puntaje(alumnos[i]);
     if (calificacion < 60) {
-      fprintf(fp, "%s\t%d\t\t%d\t\t%d\t\t%d\t\t%d\n", alumnos[i].nombre,
-              alumnos[i].puntaje.primerParcial,
-              alumnos[i].puntaje.segundoParcial,
-              alumnos[i].puntaje.tercerParcial, alumnos[i].puntaje.primerFinal,
-              alumnos[i].puntaje.segundoFinal);
+      fprintf(fp, "%s %s         ", alumnos[i].nombre, alumnos[i].apellido);
+
+      if (alumnos[i].puntaje.primerParcial != -1) {
+        fprintf(fp, "%d         ", alumnos[i].puntaje.primerParcial);
+      } else {
+        fprintf(fp, "X         ");
+      }
+
+      if (alumnos[i].puntaje.segundoParcial != -1) {
+        fprintf(fp, "%d         ", alumnos[i].puntaje.segundoParcial);
+      } else {
+        fprintf(fp, "X         ");
+      }
+
+      if (alumnos[i].puntaje.tercerParcial != -1) {
+        fprintf(fp, "%d         ", alumnos[i].puntaje.tercerParcial);
+      } else {
+        fprintf(fp, "X         ");
+      }
+
+      if (alumnos[i].puntaje.primerFinal != -1) {
+        fprintf(fp, "%d         ", alumnos[i].puntaje.primerFinal);
+      } else {
+        fprintf(fp, "X         ");
+      }
+
+      if (alumnos[i].puntaje.segundoFinal != -1) {
+        fprintf(fp, "%d         \n", alumnos[i].puntaje.segundoFinal);
+      } else {
+        fprintf(fp, "X         \n");
+      }
     }
   }
 

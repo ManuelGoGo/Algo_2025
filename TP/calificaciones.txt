@@ -3,13 +3,17 @@ Alumnos que aprobaron la materia:
 Primer Final
 Nombre Alumno     Prom Ponderado     Examen Final     Calificación
 Juan Carrillo         75.00             75                  3
+
 --------------------------------------------------------
 
 Segundo Final
 Nombre Alumno     Prom Ponderado     Examen Final     Calificación
-Shirley Cantero         60.00             60                  2Rodrigo Ferreira         70.00             70                  3Luana Pereira         91.00             95                  5
---------------------------------------------------------
+Shirley Cantero         60.00             60                  2
+Rodrigo Ferreira         70.00             70                  3
+Luana Pereira         91.00             95                  5
 
+--------------------------------------------------------
+ 
 Alumnos que no aprobaron la materia:
-Nombre Alumno	1er Parcial	2do Parcial	3er Parcial	1er Final	2do Final
-Teresa	40		20		30		-1		-1
+Nombre Alumno   1erParcial   2doParcial    3erParcial    1erFinal    2do Final
+Teresa Figueredo         40         20         30         X         X         
