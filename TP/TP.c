@@ -50,27 +50,27 @@ int leer_alumno(char *archivo, Alumno alumnos[]) {
     linea[strcspn(linea, "\n")] = '\0'; // Eliminar el salto de línea
 
     char nombreCompleto[100];
-    Alumno *a = &alumnos[contador];
+    Alumno *alu = &alumnos[contador];
 
     // Inicializar puntajes en -1
-    a->puntaje.primerParcial = -1;
-    a->puntaje.segundoParcial = -1;
-    a->puntaje.tercerParcial = -1;
-    a->puntaje.primerFinal = -1;
-    a->puntaje.segundoFinal = -1;
-
-    if (sscanf(linea, "%d, %[A-Za-z ] , %[^\n]", &a->Id, nombreCompleto,
-               a->carrera) == 3) {
+    alu->puntaje.primerParcial = -1;
+    alu->puntaje.segundoParcial = -1;
+    alu->puntaje.tercerParcial = -1;
+    alu->puntaje.primerFinal = -1;
+    alu->puntaje.segundoFinal = -1;
+    // Exprecion regular que extrae los datos
+    if (sscanf(linea, "%d, %[A-Za-z ] , %[^\n]", &alu->Id, nombreCompleto,
+               alu->carrera) == 3) {
       // Separar nombre y apellido desde el último espacio
       char *apellidoPtr = strrchr(nombreCompleto, ' ');
       if (apellidoPtr != NULL) {
         *apellidoPtr = '\0'; // Termina el nombre
         apellidoPtr++;       // Apunta al inicio del apellido
-        strcpy(a->nombre, nombreCompleto);
-        strcpy(a->apellido, apellidoPtr);
+        strcpy(alu->nombre, nombreCompleto);
+        strcpy(alu->apellido, apellidoPtr);
       } else {
-        strcpy(a->nombre, nombreCompleto);
-        a->apellido[0] = '\0';
+        strcpy(alu->nombre, nombreCompleto);
+        alu->apellido[0] = '\0';
       }
 
       contador++;
@@ -80,10 +80,11 @@ int leer_alumno(char *archivo, Alumno alumnos[]) {
   }
 
   fclose(fp);
-  return contador;
+  return contador; // Devuelve la cantidad de alumnos leidos
 }
 
 int obtener_tipos(char *archivo, Tipo tipos[], int max) {
+  // Extraer los tipos de examenes
   FILE *fp = fopen(archivo, "r");
   if (fp == NULL) {
     printf("No se pudo abrir el archivo.\n");
@@ -106,6 +107,7 @@ int obtener_tipos(char *archivo, Tipo tipos[], int max) {
 }
 
 int leer_examene(char *archivo, Examen examenes[], int max) {
+  // Extraer las nota de los examenes
   FILE *fp = fopen(archivo, "r");
   if (fp == NULL) {
     printf("No se pudo abrir el archivo.\n");
@@ -120,7 +122,8 @@ int leer_examene(char *archivo, Examen examenes[], int max) {
   Tipo tipos[100];
   int totalTipo = obtener_tipos("tipo_examen.txt", tipos, 100);
 
-  while (fgets(linea, sizeof(linea), fp) != NULL) {
+  while (fgets(linea, sizeof(linea), fp) !=
+         NULL) { // Carga las notas en cada uno de los alumnos
     int id, tipo, nota;
     char extra;
 
@@ -150,6 +153,7 @@ int leer_examene(char *archivo, Examen examenes[], int max) {
       }
     }
 
+    // Agrega tipo desconocido en el caso de que no exista el tipo
     if (!encontrado) {
       strcpy(examen.tipo, "Desconocido");
     }
@@ -162,8 +166,11 @@ int leer_examene(char *archivo, Examen examenes[], int max) {
   fclose(fp);
   return contador;
 }
+
 void cargar_notas(Alumno alumno[], int totalAlumnos, Examen examene[],
                   int totalExamenes) {
+  // Cargar las notas en cada uno de los alumnos. En caso de que no existan el
+  // alumno la nota no se carga
   for (int alu = 0; alu < totalAlumnos; alu++) {
     for (int ex = 0; ex < totalExamenes; ex++) {
       if (alumno[alu].Id == examene[ex].id) {
@@ -190,6 +197,7 @@ void cargar_notas(Alumno alumno[], int totalAlumnos, Examen examene[],
 }
 
 float puntaje(Alumno alumno) {
+  // Calcula el puntaje ponderado de cada alumno con la formula de la facultad
   int cantidad = 0;
   float promedioParcial = 0;
   int sumaParciales = 0;
@@ -204,10 +212,11 @@ float puntaje(Alumno alumno) {
     cantidad++;
   }
 
-  printf("El alumno %s tiene %d parciales\n", alumno.nombre, cantidad);
-
+  // verifica cuantos parciales rindio el alumno
   if (cantidad == 3) {
-    if (alumno.puntaje.primerParcial <= alumno.puntaje.segundoParcial) {
+    if (alumno.puntaje.primerParcial <=
+        alumno.puntaje.segundoParcial) { // toma los 2 mayores de los 3
+                                         // parciales y los promedia
       promedioParcial = (float)(alumno.puntaje.tercerParcial +
                                 alumno.puntaje.segundoParcial) /
                         2;
@@ -217,6 +226,8 @@ float puntaje(Alumno alumno) {
                         2;
     }
   } else if (cantidad == 2) {
+    // verifica cuales fueron los dos parciales que rindio el alumno y los
+    // promedia.
     if (alumno.puntaje.primerParcial > 0) {
       sumaParciales += alumno.puntaje.primerParcial;
     }
@@ -234,7 +245,8 @@ float puntaje(Alumno alumno) {
     return 0;
   }
 
-  if (alumno.puntaje.primerFinal >= 50) {
+  if (alumno.puntaje.primerFinal >=
+      50) { // Hace el promedio ponderado de los parciales y el final
 
     return promedioParcial * 0.4f + (float)alumno.puntaje.primerFinal * 0.6f;
 
