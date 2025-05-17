@@ -110,7 +110,7 @@ int leer_examene(char *archivo, Examen examenes[], int max) {
   // Extraer las nota de los examenes
   FILE *fp = fopen(archivo, "r");
   if (fp == NULL) {
-    printf("No se pudo abrir el archivo.\n");
+    printf("No se pudo abrir el archivo: %s\n", archivo);
     return 0;
   }
 
@@ -129,7 +129,8 @@ int leer_examene(char *archivo, Examen examenes[], int max) {
 
     // Validar que la línea tenga exactamente tres enteros y nada más
     if (sscanf(linea, "%d,%d,%d %c", &id, &tipo, &nota, &extra) != 3) {
-      printf("Error: línea con formato inválido: %s", linea);
+      printf("Error: línea de archivo %s con formato inválido: %s", archivo,
+             linea);
       exit(1);
     }
 
@@ -290,7 +291,7 @@ void output_estadisticas(Alumno alumnos[], int totalAlumnos, char *archivo) {
   FILE *fp = fopen(archivo, "w"); // "w" crea el archivo si no existe
   if (fp == NULL) {
     printf("Error: No se pudo crear el archivo '%s'.\n", archivo);
-    return;
+    exit(1);
   }
 
   fprintf(fp, "Estadisticas de la materia:\n");
@@ -374,6 +375,7 @@ void generar_calificaciones_txt(Alumno alumnos[], int totalAlumnos,
   FILE *fp = fopen(archivo, "w");
   if (fp == NULL) {
     printf("Error al crear el archivo '%s'\n", archivo);
+    exit(1);
     return;
   }
 
